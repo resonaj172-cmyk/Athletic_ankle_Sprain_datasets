@@ -1,0 +1,10 @@
+{
+  "best_params": {
+    "C": 1.0,
+    "class_weight": null,
+    "solver": "lbfgs"
+  },
+  "best_cv_macro_f1": 0.6737205151892067,
+  "cv_folds": 5,
+  "scoring": "f1_macro"
+}

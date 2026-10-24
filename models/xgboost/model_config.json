@@ -1,0 +1,56 @@
+{
+  "model_key": "xgboost",
+  "model_name": "XGBoost",
+  "model_format": "xgboost_json",
+  "model_file": "model.json",
+  "feature_columns": [
+    "training_duration",
+    "training_intensity",
+    "training_load",
+    "heart_rate",
+    "sleep_quality",
+    "recovery_score",
+    "stress_level"
+  ],
+  "class_names": [
+    "Low",
+    "Moderate",
+    "High"
+  ],
+  "training_medians": {
+    "training_duration": 87.89258200356934,
+    "training_intensity": 6.419753613841534,
+    "training_load": 649.6843241597608,
+    "heart_rate": 72.31784492766045,
+    "sleep_quality": 5.755680398798653,
+    "recovery_score": 54.37771884604124,
+    "stress_level": 0.4225663299369364
+  },
+  "xgboost_version": "3.4.1",
+  "metrics": {
+    "model_name": "XGBoost",
+    "test_accuracy": 0.6671689989235737,
+    "macro_precision": 0.6668826415542868,
+    "macro_recall": 0.6671271620642937,
+    "macro_f1": 0.6664250318175332,
+    "weighted_f1": 0.6662827361272498,
+    "roc_auc_macro_ovr": 0.8488336681809908,
+    "train_accuracy": 0.6888167053364269,
+    "cv_macro_f1": 0.6720945426799638,
+    "meets_target": false,
+    "precision_low": 0.7081113084665482,
+    "recall_low": 0.7642172523961661,
+    "f1_low": 0.7350952673632453,
+    "precision_moderate": 0.5311258278145695,
+    "recall_moderate": 0.5170857511283043,
+    "f1_moderate": 0.5240117608624633,
+    "precision_high": 0.7614107883817427,
+    "recall_high": 0.7200784826684107,
+    "f1_high": 0.7401680672268908
+  },
+  "timing": {
+    "total_training_wall_time_s": 208.31641769991256,
+    "fit_only_time_s": 1.1708786999806762,
+    "prediction_time_per_1k_s": 0.01095081377269217
+  }
+}

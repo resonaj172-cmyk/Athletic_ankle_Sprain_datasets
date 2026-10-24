@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Add Session - Athlete Fatigue Monitor{% endblock %}
+
+{% block content %}
+<div style="max-width: 760px; margin: 1rem auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a;">Record Session #{{ next_session_num }}</h1>
+      <p style="color: var(--text-secondary); font-size: 0.92rem;">
+        Enter your post-training metrics. The model evaluates only these seven values.
+      </p>
+    </div>
+    {% if next_session_num < 15 %}
+      <span class="badge badge-demo">History Collection ({{ next_session_num }}/14)</span>
+    {% else %}
+      <span class="badge badge-low">Live Prediction Active</span>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <form method="POST" action="{{ url_for('add_session') }}" id="sessionForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <!-- 1. Training Duration & Intensity -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label" for="training_duration">
+            <span>Training Duration <strong style="color: var(--color-high);">*</strong></span>
+            <span class="form-hint">min (30 - 180)</span>
+          </label>
+          <input type="number" step="any" id="training_duration" name="training_duration" class="form-control" placeholder="e.g. 75" value="{{ form_vals.get('training_duration', '') }}" required min="1" max="600" oninput="updateApproxLoad()">
+          <div class="form-hint">Permitted: 1 to 600 min. Typical: 30 to 180 min.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="training_intensity">
+            <span>Training Intensity</span>
+            <span class="form-hint">RPE 0-10 (2 - 10)</span>
+          </label>
+          <input type="number" step="any" id="training_intensity" name="training_intensity" class="form-control" placeholder="e.g. 7.0 (optional)" value="{{ form_vals.get('training_intensity', '') }}" min="0" max="10" oninput="updateApproxLoad()">
+          <div class="form-hint">Rate of Perceived Exertion (0 to 10 scale). Leave blank if not recorded.</div>
+        </div>
+      </div>
+
+      <!-- 2. Training Load -->
+      <div class="form-group">
+        <label class="form-label" for="training_load">
+          <span>Training Load <strong style="color: var(--color-high);">*</strong></span>
+          <span class="form-hint">a.u. (150 - 2632)</span>
+        </label>
+        <input type="number" step="any" id="training_load" name="training_load" class="form-control" placeholder="e.g. 525" value="{{ form_vals.get('training_load', '') }}" required min="0" max="10000">
+        <div class="form-hint">
+          Auto-approximated from duration &times; intensity. The original training data's load did not exactly equal duration &times; intensity, so you may edit this value directly.
+        </div>
+      </div>
+
+      <!-- 3. Heart Rate & Sleep Quality -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label" for="heart_rate">
+            <span>Heart Rate</span>
+            <span class="form-hint">bpm (40 - 160)</span>
+          </label>
+          <input type="number" step="any" id="heart_rate" name="heart_rate" class="form-control" placeholder="e.g. 74 (optional)" value="{{ form_vals.get('heart_rate', '') }}" min="30" max="220">
+          <div class="form-hint">Average heart rate in bpm. Leave blank if not recorded.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sleep_quality">
+            <span>Sleep Quality</span>
+            <span class="form-hint">0-10 scale (1.16 - 10)</span>
+          </label>
+          <input type="number" step="any" id="sleep_quality" name="sleep_quality" class="form-control" placeholder="e.g. 6.5 (optional)" value="{{ form_vals.get('sleep_quality', '') }}" min="0" max="10">
+          <div class="form-hint">Sleep score prior to training (0 to 10). Leave blank if unmeasured.</div>
+        </div>
+      </div>
+
+      <!-- 4. Recovery Score & Stress Level -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label" for="recovery_score">
+            <span>Recovery Score <strong style="color: var(--color-high);">*</strong></span>
+            <span class="form-hint">0-100 scale (8.9 - 98)</span>
+          </label>
+          <input type="number" step="any" id="recovery_score" name="recovery_score" class="form-control" placeholder="e.g. 62" value="{{ form_vals.get('recovery_score', '') }}" required min="0" max="100">
+          <div class="form-hint">Subjective or measured physical recovery state (0 to 100).</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="stress_level">
+            <span>Stress Level <strong style="color: var(--color-high);">*</strong></span>
+            <span class="form-hint">0.0 - 1.0 (0.10 - 0.95)</span>
+          </label>
+          <input type="number" step="any" id="stress_level" name="stress_level" class="form-control" placeholder="e.g. 0.35" value="{{ form_vals.get('stress_level', '') }}" required min="0" max="1.0">
+          <div class="form-hint">Perceived psychophysiological stress level (0.00 to 1.00).</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+          Save Session &bull; {% if next_session_num >= 15 %}Compute Prediction{% else %}Log Baseline{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function updateApproxLoad() {
+  const dur = parseFloat(document.getElementById('training_duration').value);
+  const intVal = parseFloat(document.getElementById('training_intensity').value);
+  const loadInput = document.getElementById('training_load');
+
+  // Only auto-fill if load input is empty or was untouched
+  if (!isNaN(dur) && !isNaN(intVal) && (!loadInput.value || loadInput.dataset.autofilled === "true")) {
+    loadInput.value = Math.round(dur * intVal * 1.0);
+    loadInput.dataset.autofilled = "true";
+  }
+}
+
+document.getElementById('training_load').addEventListener('input', function() {
+  this.dataset.autofilled = "false";
+});
+</script>
+{% endblock %}

@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Pulse Athletics &bull; Precision Fatigue Intelligence &amp; Workload Monitoring{% endblock %}
+
+{% block content %}
+<div class="landing-page-root">
+
+  <!-- ================= HERO SECTION ================= -->
+  <section class="landing-hero">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="pulse-live-dot"></span>
+        <span>Sports Physiology &amp; Acute Workload Analytics</span>
+      </div>
+
+      <h1 class="hero-headline">
+        Precision Fatigue Intelligence for Elite Athletes &amp; Coaches
+      </h1>
+
+      <p class="hero-subheadline">
+        Session-by-session machine learning classification calibrated against 7-day and 14-day rolling baselines. Prevent overtraining syndromes, optimize recovery intervals, and maintain peak athletic output.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-hero">
+          Access Athlete Portal
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-hero">
+          Create Athlete Account
+        </a>
+      </div>
+
+      <!-- ================= LIVE TELEMETRY PREVIEW CARD ================= -->
+      <div class="telemetry-preview-card">
+        <div class="preview-card-header">
+          <div class="athlete-identity">
+            <div class="avatar-ring">AM</div>
+            <div>
+              <div class="athlete-name">Alex Morgan &bull; Athlete #A004</div>
+              <div class="athlete-meta">Women's National Football &bull; Olympic Microcycle</div>
+            </div>
+          </div>
+          <div class="preview-status-pill status-optimal">
+            <span class="status-indicator-dot"></span>
+            Optimal Adaptive State
+          </div>
+        </div>
+
+        <div class="preview-metrics-grid">
+          <div class="preview-metric">
+            <div class="metric-label">Session Workload</div>
+            <div class="metric-value">680 <span class="metric-unit">AU</span></div>
+            <div class="metric-sub">85 min &times; RPE 8.0</div>
+          </div>
+          <div class="preview-metric">
+            <div class="metric-label">Heart Rate (Avg)</div>
+            <div class="metric-value">72 <span class="metric-unit">BPM</span></div>
+            <div class="metric-sub text-success">&minus;2 bpm below chronic</div>
+          </div>
+          <div class="preview-metric">
+            <div class="metric-label">Sleep Architecture</div>
+            <div class="metric-value">7.8 <span class="metric-unit">HRS</span></div>
+            <div class="metric-sub">8.2 / 10 Sleep Quality</div>
+          </div>
+          <div class="preview-metric">
+            <div class="metric-label">Recovery Score</div>
+            <div class="metric-value">84 <span class="metric-unit">/ 100</span></div>
+            <div class="metric-sub text-success">High Neuromuscular Readiness</div>
+          </div>
+        </div>
+
+        <div class="preview-fatigue-section">
+          <div class="fatigue-header">
+            <div class="fatigue-title">
+              <span class="fatigue-indicator-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </span>
+              <span>Model Prediction &bull; Session #15 Diagnostic</span>
+            </div>
+            <div class="fatigue-outcome badge badge-low">
+              LOW FATIGUE (88.4% Confidence)
+            </div>
+          </div>
+
+          <div class="prob-bar-container">
+            <div class="prob-segment low" style="width: 88.4%;">88.4% Low</div>
+            <div class="prob-segment moderate" style="width: 9.8%;">9.8%</div>
+            <div class="prob-segment high" style="width: 1.8%;">1.8%</div>
+          </div>
+
+          <div class="preview-baselines-footer">
+            <div class="baseline-item">
+              <span class="base-lbl">7-Session Acute Mean:</span>
+              <span class="base-val">610.0 AU</span>
+            </div>
+            <div class="baseline-item">
+              <span class="base-lbl">14-Session Chronic Baseline:</span>
+              <span class="base-val">645.0 AU</span>
+            </div>
+            <div class="baseline-item">
+              <span class="base-lbl">Acute:Chronic Ratio:</span>
+              <span class="base-val text-success">1.05 (Sweet Spot: 0.8&ndash;1.3)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= METRICS COUNTER BAR ================= -->
+  <section class="metrics-counter-bar">
+    <div class="counter-col">
+      <div class="counter-num">14-Session</div>
+      <div class="counter-label">Longitudinal Rolling Baselines</div>
+    </div>
+    <div class="counter-divider"></div>
+    <div class="counter-col">
+      <div class="counter-num">3-Tier</div>
+      <div class="counter-label">Dynamic Fatigue Stratification</div>
+    </div>
+    <div class="counter-divider"></div>
+    <div class="counter-col">
+      <div class="counter-num">7 Biomarkers</div>
+      <div class="counter-label">Simultaneously Evaluated</div>
+    </div>
+    <div class="counter-divider"></div>
+    <div class="counter-col">
+      <div class="counter-num">&lt; 20ms</div>
+      <div class="counter-label">Edge Inference Latency</div>
+    </div>
+  </section>
+
+  <!-- ================= METHODOLOGY & SCIENCE ================= -->
+  <section id="methodology" class="landing-section">
+    <div class="section-header">
+      <div class="section-tag">Methodology &amp; Sports Science</div>
+      <h2 class="section-title">Rooted in Exercise Physiology &amp; Workload Science</h2>
+      <p class="section-desc">
+        We replace guesswork with validated sports science frameworks, combining Foster’s session-RPE method with non-linear machine learning to detect acute overreaching before chronic fatigue sets in.
+      </p>
+    </div>
+
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Foster Session-RPE Method</h3>
+        <p class="pillar-desc">
+          Calculates acute session volume by multiplying subjective exertion (Borg CR-10 scale) against total training duration, providing standardized internal load across varied workout modalities.
+        </p>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"/>
+            <path d="m19 9-5 5-4-4-3 3"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Acute-to-Chronic Baselines</h3>
+        <p class="pillar-desc">
+          Compares current microcycle workload against 7-session acute and 14-session chronic moving averages to identify sudden volume spikes—the leading predictor of soft tissue injury.
+        </p>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Autonomic &amp; Lifestyle Telemetry</h3>
+        <p class="pillar-desc">
+          Integrates resting cardiovascular responses with sleep architecture, subjective recovery ratings, and psychological stress to differentiate adaptive strain from systemic exhaustion.
+        </p>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Explainable Class Attribution</h3>
+        <p class="pillar-desc">
+          Provides granular probability scores across Low, Moderate, and High fatigue states, pairing each prediction with key contributing factors so athletes know exactly what to modify.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELEMETRY VARIABLES ================= -->
+  <section id="telemetry" class="landing-section bg-alt-section">
+    <div class="section-header">
+      <div class="section-tag">Telemetry Framework</div>
+      <h2 class="section-title">The 7 Multi-Parametric Telemetry Inputs</h2>
+      <p class="section-desc">
+        Every training session is systematically analyzed across 7 physiological and subjective biomarkers.
+      </p>
+    </div>
+
+    <div class="telemetry-table-wrapper">
+      <table class="telemetry-specs-table">
+        <thead>
+          <tr>
+            <th>Telemetry Variable</th>
+            <th>Type</th>
+            <th>Unit / Range</th>
+            <th>Physiological Significance</th>
+            <th>Baseline Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Training Duration</strong></td>
+            <td>External Load</td>
+            <td>15 &ndash; 300 min</td>
+            <td>Volume exposure and aerobic/glycolytic glycogen depletion duration</td>
+            <td>Acute Load Driver</td>
+          </tr>
+          <tr>
+            <td><strong>Training Intensity (RPE)</strong></td>
+            <td>Internal Exertion</td>
+            <td>1.0 &ndash; 10.0 (Borg CR-10)</td>
+            <td>Subjective central nervous system perceived exertion</td>
+            <td>Session Multiplier</td>
+          </tr>
+          <tr>
+            <td><strong>Training Load</strong></td>
+            <td>Workload AU</td>
+            <td>100 &ndash; 3,000 AU</td>
+            <td>Cumulative physiological training stimulus (Duration &times; RPE)</td>
+            <td>ACWR Calculation</td>
+          </tr>
+          <tr>
+            <td><strong>Heart Rate</strong></td>
+            <td>Cardiovascular</td>
+            <td>40 &ndash; 220 BPM</td>
+            <td>Autonomic cardiac output and cardiovascular drift indicator</td>
+            <td>Physiological Strain</td>
+          </tr>
+          <tr>
+            <td><strong>Sleep Quality</strong></td>
+            <td>Lifestyle Recovery</td>
+            <td>1.0 &ndash; 10.0 Scale</td>
+            <td>REM / deep sleep architecture and cellular protein resynthesis</td>
+            <td>Recovery Modulator</td>
+          </tr>
+          <tr>
+            <td><strong>Recovery Score</strong></td>
+            <td>Neuromuscular</td>
+            <td>0 &ndash; 100 Score</td>
+            <td>Subjective readiness, muscle soreness, and tendon compliance</td>
+            <td>Readiness Baseline</td>
+          </tr>
+          <tr>
+            <td><strong>Stress Level</strong></td>
+            <td>Autonomic Tone</td>
+            <td>0.0 &ndash; 1.0 Normalized</td>
+            <td>Sympathetic tone, cortisol response, and life stress factors</td>
+            <td>Allostatic Load</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= WORKFLOW: 3 STEPS ================= -->
+  <section class="landing-section">
+    <div class="section-header">
+      <div class="section-tag">Athletic Workflow</div>
+      <h2 class="section-title">How Athletes &amp; Coaches Use Pulse</h2>
+      <p class="section-desc">
+        A seamless 60-second routine after each training session provides comprehensive recovery intelligence.
+      </p>
+    </div>
+
+    <div class="workflow-steps-grid">
+      <div class="step-card">
+        <div class="step-badge">Step 01</div>
+        <h3 class="step-title">Log Session Telemetry</h3>
+        <p class="step-desc">
+          After completing your training session, input your workout duration, RPE intensity, average heart rate, sleep quality, and subjective recovery score in the portal.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-badge">Step 02</div>
+        <h3 class="step-title">Algorithmic Baseline Check</h3>
+        <p class="step-desc">
+          The engine automatically pulls your last 7-day and 14-day rolling averages, evaluating acute volume spikes, sleep debts, and allostatic stress deviations.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-badge">Step 03</div>
+        <h3 class="step-title">Receive Fatigue Diagnostics</h3>
+        <p class="step-desc">
+          Instant multi-class probability scores classify fatigue into Low, Moderate, or High risk with transparent contributing factors and actionable workload adjustments.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COACH VALIDATION ================= -->
+  <section class="landing-section endorsement-section">
+    <div class="endorsement-card">
+      <div class="quote-mark">&ldquo;</div>
+      <p class="quote-text">
+        In elite athletics, the difference between peak adaptation and overtraining injury is razor-thin. By evaluating every acute training session against established 7-session and 14-session moving baselines, Pulse gives coaching staffs the objective guardrails needed to push athletes safely to their limits.
+      </p>
+      <div class="quote-author">
+        <div class="author-avatar">MS</div>
+        <div>
+          <div class="author-name">Dr. Marcus Sterling, PhD, CSCS</div>
+          <div class="author-title">Director of High Performance &bull; Elite Track &amp; Field High Performance Center</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA BANNER ================= -->
+  <section class="landing-cta-banner">
+    <div class="cta-banner-content">
+      <h2 class="cta-title">Elevate Your Athletic Readiness Today</h2>
+      <p class="cta-desc">
+        Log your session telemetry, track your acute:chronic workload ratios, and protect yourself against preventable fatigue injuries.
+      </p>
+      <div class="cta-actions">
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-cta-light">
+          Sign In to Athlete Portal
+        </a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-cta-outline">
+          Create Athlete Account
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+
+{% block title %}Session #{{ record.session_number }} Result - Athlete Fatigue Monitor{% endblock %}
+
+{% block content %}
+<div style="max-width: 960px; margin: 1rem auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Session #{{ record.session_number }}</h1>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.25rem;">
+        Logged on {{ record.created_at.strftime('%B %d, %Y at %H:%M UTC') if record.created_at else 'N/A' }}
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('add_session') }}" class="btn btn-primary" style="font-size: 0.88rem;">+ Add Another Session</a>
+      <a href="{{ url_for('history') }}" class="btn btn-secondary" style="font-size: 0.88rem;">📜 View History</a>
+      <a href="{{ url_for('assistant') }}" class="btn btn-secondary" style="font-size: 0.88rem;">💬 Ask AI Assistant</a>
+    </div>
+  </div>
+
+  <!-- ATHLETE PROFILE SUMMARY BAR -->
+  {% if athlete %}
+    <div style="padding: 0.75rem 1.25rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius-md); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; box-shadow: var(--shadow-card);">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.25rem;">🏃</span>
+        <div>
+          <span style="font-weight: 700; color: #0f172a;">Athlete Profile:</span>
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">
+            ID: <span class="athlete-badge">{{ athlete.formatted_id }}</span>
+            {% if athlete.age %}&bull; {{ athlete.age }} yrs{% endif %}
+            {% if athlete.gender %}&bull; {{ athlete.gender }}{% endif %}
+            {% if athlete.sport_type %}&bull; {{ athlete.sport_type }}{% endif %}
+            {% if athlete.height_cm %}&bull; {{ athlete.height_cm }} cm{% endif %}
+            {% if athlete.weight_kg %}&bull; {{ athlete.weight_kg }} kg{% endif %}
+          </span>
+        </div>
+      </div>
+      <a href="{{ url_for('athlete_details') }}" style="font-size: 0.8rem; color: var(--accent-cyan); text-decoration: none;">Edit Profile &rarr;</a>
+    </div>
+  {% endif %}
+
+  {% if not record.predicted_class %}
+    <!-- Session < 15 Notice -->
+    <div class="card" style="border-left: 4px solid var(--color-moderate);">
+      <div class="card-header">
+        <h2 class="card-title" style="color: #fbbf24;">Session Saved &bull; Baseline History Collection</h2>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.25rem; line-height: 1.6;">
+        Session saved. Collecting initial history ({{ record.session_number }} of 14). Predictions start at session 15.
+      </p>
+      <div style="background: rgba(0, 0, 0, 0.3); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 1.5rem;">
+        <div data-pct="{{ (record.session_number / 14 * 100) | round(0) }}" style="background: linear-gradient(90deg, #06b6d4, #3b82f6); height: 100%;"></div>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Sessions 1 through 14 build the rolling window baseline for load and recovery context. Live predictions using the selected machine learning model activate on session 15.
+      </p>
+    </div>
+  {% else %}
+    <!-- LIVE PREDICTION HERO CARD -->
+    <div class="card card-border-{{ record.predicted_class.lower() if record.predicted_class else 'low' }}">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Predicted Fatigue State</div>
+          <span class="badge badge-{{ record.predicted_class.lower() }}" style="font-size: 1.75rem; padding: 0.4rem 1.5rem; font-weight: 800;">
+            {{ record.predicted_class }}
+          </span>
+        </div>
+
+        <div style="text-align: right;">
+          <div style="font-size: 0.82rem; color: var(--text-secondary);">Active Prediction Model</div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">{{ record.model_name }}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Session-by-session 7-feature inference</div>
+        </div>
+      </div>
+
+      <!-- Probability Bar -->
+      {% set low_pct = ((record.prob_low or 0) * 100) | round(1) %}
+      {% set mod_pct = ((record.prob_moderate or 0) * 100) | round(1) %}
+      {% set high_pct = ((record.prob_high or 0) * 100) | round(1) %}
+
+      <div style="margin: 1.25rem 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+          <span style="font-weight: 700; color: #0f172a;">Class Confidence Distribution:</span>
+          <span>
+            <strong style="color: #34d399;">Low:</strong> {{ low_pct }}% &bull;
+            <strong style="color: #fbbf24;">Moderate:</strong> {{ mod_pct }}% &bull;
+            <strong style="color: #f87171;">High:</strong> {{ high_pct }}%
+          </span>
+        </div>
+
+        <div class="prob-bar-container" style="height: 32px;">
+          <div class="prob-segment low" data-pct="{{ low_pct }}">
+            {% if low_pct >= 8 %}Low {{ low_pct }}%{% endif %}
+          </div>
+          <div class="prob-segment moderate" data-pct="{{ mod_pct }}">
+            {% if mod_pct >= 8 %}Moderate {{ mod_pct }}%{% endif %}
+          </div>
+          <div class="prob-segment high" data-pct="{{ high_pct }}">
+            {% if high_pct >= 8 %}High {{ high_pct }}%{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIMARY FEATURE FATIGUE ROOT CAUSE ANSWER & COMPARISON CARD -->
+    {% if explanation and explanation.primary_cause %}
+      {% set pc = explanation.primary_cause %}
+      <div class="card" style="background: #ffffff; border: 2px solid #2563eb; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);">
+        <div class="card-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 0.85rem; margin-bottom: 1rem;">
+          <div>
+            <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 4px; margin-bottom: 0.4rem; display: inline-block;">
+              Fatigue Cause Answer & Comparison Summary
+            </span>
+            <h2 class="card-title" style="font-size: 1.35rem; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              🎯 Which Feature Affected Fatigue & Session Baseline Comparison
+            </h2>
+          </div>
+        </div>
+
+        <!-- PRIMARY DIRECT ANSWER CALLOUT BOX -->
+        <div style="background: #f0f9ff; border-left: 4px solid #0284c7; padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+          <div style="font-size: 1.15rem; font-weight: 800; color: #0369a1; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem;">
+            ⚡ Primary Feature Causing Fatigue: <span style="color: #0f172a; text-decoration: underline; text-decoration-color: #0284c7;">{{ pc.feature_name }} ({{ pc.actual_value }} {{ pc.unit }})</span>
+          </div>
+          <p style="font-size: 0.95rem; color: #334155; line-height: 1.65; margin: 0;">
+            Your predicted fatigue state of <strong style="color: #0f172a;">{{ pc.predicted_class }}</strong> was primarily driven by <strong>{{ pc.feature_name }}</strong>, contributing <strong>+{{ pc.delta_pct }}%</strong> model confidence toward this state classification.
+            {% if pc.prev_session_num %}
+              Comparing with <strong>Session #{{ pc.prev_session_num }}</strong> ({{ pc.prev_session_val }} {{ pc.unit }}), {{ pc.feature_name }} changed by
+              <strong class="{% if pc.prev_session_diff > 0 and pc.feature_key in ['training_load', 'training_duration', 'training_intensity', 'stress_level', 'heart_rate'] %}text-danger{% elif pc.prev_session_diff < 0 and pc.feature_key in ['recovery_score', 'sleep_quality'] %}text-danger{% else %}text-success{% endif %}">
+                {{ '+' if pc.prev_session_diff > 0 else '' }}{{ pc.prev_session_diff | round(2) }} {{ pc.unit }} ({{ '+' if pc.prev_session_pct > 0 else '' }}{{ pc.prev_session_pct | round(1) }}%)
+              </strong>.
+            {% endif %}
+            {% if pc.contrast_session_num %}
+              Compared to your lowest-workload resting baseline (<strong>Session #{{ pc.contrast_session_num }}</strong>: {{ pc.contrast_session_val }} {{ pc.unit }}), it shifted by
+              <strong>{{ '+' if pc.contrast_session_diff > 0 else '' }}{{ pc.contrast_session_diff | round(2) }} {{ pc.unit }} ({{ '+' if pc.contrast_session_pct > 0 else '' }}{{ pc.contrast_session_pct | round(1) }}%)</strong>.
+            {% endif %}
+          </p>
+        </div>
+
+        <!-- COMPARISON WITH PREVIOUS 7-WEEK AND 14-WEEK SESSIONS -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+          <!-- 7-WEEK / 7-SESSION COMPARISON -->
+          <div style="padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.35rem;">
+              📅 Previous 7-Week / 7-Session Baseline
+            </div>
+            {% if pc.mean_7 is not none %}
+              {% set is_danger_7 = (pc.diff_7 > 0 and pc.feature_key in ['training_load', 'training_duration', 'training_intensity', 'stress_level']) or (pc.diff_7 < 0 and pc.feature_key in ['recovery_score', 'sleep_quality']) %}
+              <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;">
+                {{ pc.mean_7 | round(1) }} {{ pc.unit }} <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">(7-session avg)</span>
+              </div>
+              <div class="{{ 'text-danger' if is_danger_7 else 'text-success' }}" style="font-size: 0.88rem; font-weight: 600;">
+                Today vs 7-Week Avg: {{ '+' if pc.diff_7 > 0 else '' }}{{ pc.diff_7 | round(2) }} {{ pc.unit }} ({{ '+' if pc.pct_7 > 0 else '' }}{{ pc.pct_7 | round(1) }}%)
+              </div>
+            {% else %}
+              <div style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+                Baseline history collection in progress (&lt; 7 sessions).
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- 14-WEEK / 14-SESSION COMPARISON -->
+          <div style="padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.35rem;">
+              📅 Previous 14-Week / 14-Session Baseline
+            </div>
+            {% if pc.mean_14 is not none %}
+              {% set is_danger_14 = (pc.diff_14 > 0 and pc.feature_key in ['training_load', 'training_duration', 'training_intensity', 'stress_level']) or (pc.diff_14 < 0 and pc.feature_key in ['recovery_score', 'sleep_quality']) %}
+              <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;">
+                {{ pc.mean_14 | round(1) }} {{ pc.unit }} <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">(14-session avg)</span>
+              </div>
+              <div class="{{ 'text-danger' if is_danger_14 else 'text-success' }}" style="font-size: 0.88rem; font-weight: 600;">
+                Today vs 14-Week Avg: {{ '+' if pc.diff_14 > 0 else '' }}{{ pc.diff_14 | round(2) }} {{ pc.unit }} ({{ '+' if pc.pct_14 > 0 else '' }}{{ pc.pct_14 | round(1) }}%)
+              </div>
+            {% else %}
+              <div style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+                Baseline history collection in progress (&lt; 14 sessions).
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- FATIGUE REASONS & DRIVING FACTORS CARD -->
+    {% if explanation and explanation.fatigue_reasons %}
+      <div class="card" style="background: #ffffff; border: 1px solid #cbd5e1;">
+        <div class="card-header">
+          <h2 class="card-title" style="display: flex; align-items: center; gap: 0.5rem; color: #0f172a;">
+            🔍 Contributing Reasons & Drivers for {{ record.predicted_class }} Fatigue Prediction
+          </h2>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Session & 7/14 Baseline Analysis</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+          {% for r in explanation.fatigue_reasons %}
+            <div style="padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); display: flex; gap: 0.75rem;">
+              <div style="font-size: 1.5rem; line-height: 1;">{{ r.icon }}</div>
+              <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">
+                  {{ r.category }}
+                </div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">
+                  {{ r.title }}
+                </div>
+                <div style="font-size: 0.85rem; color: #475569; line-height: 1.45;">
+                  {{ r.description }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  <!-- 7 ENTERED SESSION VALUES & STATE LABELS -->
+  <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <!-- Entered Values Card -->
+    <div class="card" style="margin-bottom: 0;">
+      <div class="card-header">
+        <h2 class="card-title">Entered Session Values (7 Model Inputs)</h2>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Training Duration:</strong></td>
+              <td>{{ record.training_duration }} min</td>
+            </tr>
+            <tr>
+              <td><strong>Training Intensity:</strong></td>
+              <td>{{ record.training_intensity if record.training_intensity is not none else 'Not provided' }} RPE</td>
+            </tr>
+            <tr>
+              <td><strong>Training Load:</strong></td>
+              <td><strong>{{ record.training_load }}</strong> a.u.</td>
+            </tr>
+            <tr>
+              <td><strong>Heart Rate:</strong></td>
+              <td>{{ record.heart_rate if record.heart_rate is not none else 'Not provided' }} bpm</td>
+            </tr>
+            <tr>
+              <td><strong>Sleep Quality:</strong></td>
+              <td>{{ record.sleep_quality if record.sleep_quality is not none else 'Not provided' }} / 10</td>
+            </tr>
+            <tr>
+              <td><strong>Recovery Score:</strong></td>
+              <td>{{ record.recovery_score }} / 100</td>
+            </tr>
+            <tr>
+              <td><strong>Stress Level:</strong></td>
+              <td>{{ record.stress_level }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- State Labels Card -->
+    <div class="card" style="margin-bottom: 0;">
+      <div class="card-header">
+        <h2 class="card-title">Lifestyle State Categories</h2>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">Fixed rules (display only)</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm);">
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Sleep Quality</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Score: {{ record.sleep_quality if record.sleep_quality is not none else 'N/A' }}</div>
+          </div>
+          <span class="badge badge-{% if state_labels.sleep.badge == 'success' %}low{% elif state_labels.sleep.badge == 'warning' %}moderate{% elif state_labels.sleep.badge == 'danger' %}high{% else %}demo{% endif %}">
+            {{ state_labels.sleep.label }}
+          </span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm);">
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Recovery Readiness</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Score: {{ record.recovery_score }} / 100</div>
+          </div>
+          <span class="badge badge-{% if state_labels.recovery.badge == 'success' %}low{% elif state_labels.recovery.badge == 'warning' %}moderate{% elif state_labels.recovery.badge == 'danger' %}high{% else %}demo{% endif %}">
+            {{ state_labels.recovery.label }}
+          </span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm);">
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Stress Level</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Index: {{ record.stress_level }}</div>
+          </div>
+          <span class="badge badge-{% if state_labels.stress.badge == 'success' %}low{% elif state_labels.stress.badge == 'warning' %}moderate{% elif state_labels.stress.badge == 'danger' %}high{% else %}demo{% endif %}">
+            {{ state_labels.stress.label }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL PARAMETER DETAILED COMPARISON TABLE (PREVIOUS 7-WEEK & 14-WEEK SESSIONS) -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">📊 Parameter Breakdown & Comparison (Previous 7-Week & 14-Week Sessions)</h2>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Current vs Previous Session (#{{ workload.previous_session.session_number if workload and workload.previous_session else 'N-1' }}) vs 7 & 14 Week Averages</span>
+    </div>
+
+    <div style="padding: 0.65rem 1rem; background: #f1f5f9; border-left: 4px solid #3b82f6; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem; color: #334155;">
+      ℹ️ <strong>Session History Analysis:</strong> Below is the detailed comparison of each parameter entered against the previous session and the 7-week (7-session) and 14-week (14-session) historical averages.
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Today's Session</th>
+            <th>Previous Session{% if workload and workload.previous_session %} (#{{ workload.previous_session.session_number }}){% endif %}</th>
+            <th>Previous 7-Week Baseline Avg</th>
+            <th>Previous 14-Week Baseline Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if workload and workload.parameter_comparisons %}
+            {% for p in workload.parameter_comparisons %}
+              <tr>
+                <td>
+                  <strong>{{ p.label }}</strong>
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">({{ p.unit }})</span>
+                </td>
+                <td>
+                  <strong style="color: #0f172a; font-size: 0.95rem;">
+                    {% if p.current_val is not none %}{{ p.current_val }}{% else %}N/A{% endif %}
+                  </strong>
+                </td>
+                <td>
+                  {% if p.prev_val is not none %}
+                    {{ p.prev_val }}
+                    {% if p.prev_pct is not none %}
+                      {% set is_danger_prev = (p.prev_diff > 0 and p.key in ['training_load', 'training_duration', 'training_intensity', 'stress_level', 'heart_rate']) or (p.prev_diff < 0 and p.key in ['recovery_score', 'sleep_quality']) %}
+                      <span class="{{ 'text-danger' if is_danger_prev else 'text-success' }}" style="font-size: 0.8rem; font-weight: 700; margin-left: 0.3rem;">
+                        ({{ '+' if p.prev_diff > 0 else '' }}{{ p.prev_pct | round(1) }}%)
+                      </span>
+                    {% endif %}
+                  {% else %}
+                    <span style="color: var(--text-muted);">N/A</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if p.mean_7 is not none %}
+                    {{ p.mean_7 | round(2) }}
+                    {% if p.pct_7 is not none %}
+                      {% set is_danger_p7 = (p.diff_7 > 0 and p.key in ['training_load', 'training_duration', 'training_intensity', 'stress_level', 'heart_rate']) or (p.diff_7 < 0 and p.key in ['recovery_score', 'sleep_quality']) %}
+                      <span class="{{ 'text-danger' if is_danger_p7 else 'text-success' }}" style="font-size: 0.8rem; font-weight: 700; margin-left: 0.3rem;">
+                        ({{ '+' if p.diff_7 > 0 else '' }}{{ p.pct_7 | round(1) }}%)
+                      </span>
+                    {% endif %}
+                  {% else %}
+                    <span style="color: var(--text-muted);">Insufficient History</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if p.mean_14 is not none %}
+                    {{ p.mean_14 | round(2) }}
+                    {% if p.pct_14 is not none %}
+                      {% set is_danger_p14 = (p.diff_14 > 0 and p.key in ['training_load', 'training_duration', 'training_intensity', 'stress_level', 'heart_rate']) or (p.diff_14 < 0 and p.key in ['recovery_score', 'sleep_quality']) %}
+                      <span class="{{ 'text-danger' if is_danger_p14 else 'text-success' }}" style="font-size: 0.8rem; font-weight: 700; margin-left: 0.3rem;">
+                        ({{ '+' if p.diff_14 > 0 else '' }}{{ p.pct_14 | round(1) }}%)
+                      </span>
+                    {% endif %}
+                  {% else %}
+                    <span style="color: var(--text-muted);">Insufficient History</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- WORKLOAD SUMMARY METRICS TABLE -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Workload Summary Metrics (Previous 7 & 14 Sessions)</h2>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Context Metric</th>
+            <th>Previous 7 Sessions</th>
+            <th>Previous 14 Sessions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Total Training Load Sum</strong></td>
+            <td>
+              {% if workload and workload.has_window_7 and workload.load_sum_7 is not none %}
+                {{ workload.load_sum_7 | round(1) }} a.u.
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if workload and workload.has_window_14 and workload.load_sum_14 is not none %}
+                {{ workload.load_sum_14 | round(1) }} a.u.
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+          </tr>
+
+          <tr>
+            <td><strong>Mean Session Training Load</strong></td>
+            <td>
+              {% if workload and workload.has_window_7 and workload.load_mean_7 is not none %}
+                {{ workload.load_mean_7 | round(2) }} a.u.
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if workload and workload.has_window_14 and workload.load_mean_14 is not none %}
+                {{ workload.load_mean_14 | round(2) }} a.u.
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+          </tr>
+
+          <tr>
+            <td><strong>Today vs Rolling Mean (Diff)</strong></td>
+            <td>
+              {% if workload and workload.has_window_7 and workload.load_minus_mean_7 is not none %}
+                <span class="{% if workload.load_minus_mean_7 > 0 %}text-danger{% else %}text-success{% endif %}" style="font-weight: 600;">
+                  {{ '+' if workload.load_minus_mean_7 > 0 else '' }}{{ workload.load_minus_mean_7 | round(2) }} a.u.
+                </span>
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if workload and workload.has_window_14 and workload.load_minus_mean_14 is not none %}
+                <span class="{% if workload.load_minus_mean_14 > 0 %}text-danger{% else %}text-success{% endif %}" style="font-weight: 600;">
+                  {{ '+' if workload.load_minus_mean_14 > 0 else '' }}{{ workload.load_minus_mean_14 | round(2) }} a.u.
+                </span>
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+          </tr>
+
+          <tr>
+            <td><strong>Today vs Rolling Mean (Ratio)</strong></td>
+            <td>
+              {% if workload and workload.has_window_7 and workload.load_ratio_7 is not none %}
+                <strong>{{ workload.load_ratio_7 | round(3) }}&times;</strong>
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if workload and workload.has_window_14 and workload.load_ratio_14 is not none %}
+                <strong>{{ workload.load_ratio_14 | round(3) }}&times;</strong>
+              {% else %}
+                <span style="color: var(--text-muted);">Insufficient history</span>
+              {% endif %}
+            </td>
+          </tr>
+
+          <tr>
+            <td><strong>Mean Recovery Score</strong></td>
+            <td>
+              {{ (workload.recovery_score_mean_7 | round(2)) if (workload and workload.recovery_score_mean_7 is not none) else 'N/A' }}
+            </td>
+            <td>
+              {{ (workload.recovery_score_mean_14 | round(2)) if (workload and workload.recovery_score_mean_14 is not none) else 'N/A' }}
+            </td>
+          </tr>
+
+          <tr>
+            <td><strong>Mean Stress Level</strong></td>
+            <td>
+              {{ (workload.stress_level_mean_7 | round(3)) if (workload and workload.stress_level_mean_7 is not none) else 'N/A' }}
+            </td>
+            <td>
+              {{ (workload.stress_level_mean_14 | round(3)) if (workload and workload.stress_level_mean_14 is not none) else 'N/A' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if record.predicted_class and explanation %}
+    <!-- WHY THIS PREDICTION? (FACTORS) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Why this prediction?</h2>
+        <span style="font-size: 0.82rem; color: var(--text-secondary);">Relative factor contributions (vs dataset median baseline)</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
+        <!-- Pushed Toward -->
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-sm); padding: 1rem;">
+          <h3 style="font-size: 0.95rem; color: #047857; margin-bottom: 0.75rem; font-weight: 700;">
+            ▲ Top factors pushing toward {{ record.predicted_class }}:
+          </h3>
+          {% if explanation.top_towards %}
+            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem;">
+              {% for f in explanation.top_towards %}
+                <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #d1fae5; padding-bottom: 0.35rem; color: #0f172a;">
+                  <span>{{ f.friendly_name }} ({{ f.actual_value }})</span>
+                  <span style="color: #047857; font-weight: 700;">+{{ f.delta_pct }}%</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p style="font-size: 0.85rem; color: var(--text-muted);">No factors significantly increased probability over baseline.</p>
+          {% endif %}
+        </div>
+
+        <!-- Pushed Against -->
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-sm); padding: 1rem;">
+          <h3 style="font-size: 0.95rem; color: #b91c1c; margin-bottom: 0.75rem; font-weight: 700;">
+            ▼ Factors dampening {{ record.predicted_class }} probability:
+          </h3>
+          {% if explanation.top_against %}
+            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem;">
+              {% for f in explanation.top_against %}
+                <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #fee2e2; padding-bottom: 0.35rem; color: #0f172a;">
+                  <span>{{ f.friendly_name }} ({{ f.actual_value }})</span>
+                  <span style="color: #b91c1c; font-weight: 700;">{{ f.delta_pct }}%</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p style="font-size: 0.85rem; color: var(--text-muted);">All factors were neutral or positive.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+        {{ explanation.importance_sentence }}
+      </div>
+    </div>
+
+    <!-- WHAT-IF SIMULATOR -->
+    <div class="card" id="whatIfSection">
+      <div class="card-header">
+        <h2 class="card-title">What-If Fatigue Simulation</h2>
+        <span style="font-size: 0.82rem; color: var(--text-secondary);">Test lifestyle modifications</span>
+      </div>
+
+      <div style="padding: 0.75rem 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.85rem; color: #92400e;">
+        ⚠️ <strong>Note:</strong> Model-based what-if simulation. Shows what this model learned from its training data.
+      </div>
+
+      <!-- Smallest Single Change Recommendation -->
+      {% if what_if_data and what_if_data.best_single_change %}
+        <div style="padding: 1rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 0.95rem; color: #065f46; margin-bottom: 0.35rem; font-weight: 700;">
+            💡 Smallest single change to lower fatigue class to <strong>{{ what_if_data.best_single_change.target_class }}</strong>:
+          </h3>
+          <p style="font-size: 0.9rem; color: #0f172a;">
+            Adjusting <strong>{{ what_if_data.best_single_change.label }}</strong> from <strong>{{ what_if_data.best_single_change.current }}</strong> to <strong>{{ what_if_data.best_single_change.needed }}</strong> ({{ what_if_data.best_single_change.change }}) would be sufficient to shift the predicted state.
+          </p>
+        </div>
+      {% elif record.predicted_class != 'Low' %}
+        <div style="padding: 0.85rem; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.88rem; color: var(--text-secondary);">
+          No single change was enough within standard training ranges to shift the class alone.
+        </div>
+      {% endif %}
+
+      <!-- Interactive Sliders -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+        <div class="form-group">
+          <label class="form-label" for="slider_sleep">
+            <span>Sleep Quality: <span id="val_sleep">{{ record.sleep_quality if record.sleep_quality is not none else 5.5 }}</span></span>
+            <span class="form-hint">1.16 - 10.0</span>
+          </label>
+          <input type="range" id="slider_sleep" min="1.16" max="10.0" step="0.1" value="{{ record.sleep_quality if record.sleep_quality is not none else 5.5 }}" class="form-control" style="padding: 0.3rem;" oninput="runWhatIf()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="slider_recovery">
+            <span>Recovery Score: <span id="val_recovery">{{ record.recovery_score }}</span></span>
+            <span class="form-hint">8.9 - 98.0</span>
+          </label>
+          <input type="range" id="slider_recovery" min="8.9" max="98.0" step="1.0" value="{{ record.recovery_score }}" class="form-control" style="padding: 0.3rem;" oninput="runWhatIf()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="slider_stress">
+            <span>Stress Level: <span id="val_stress">{{ record.stress_level }}</span></span>
+            <span class="form-hint">0.10 - 0.95</span>
+          </label>
+          <input type="range" id="slider_stress" min="0.10" max="0.95" step="0.01" value="{{ record.stress_level }}" class="form-control" style="padding: 0.3rem;" oninput="runWhatIf()">
+        </div>
+      </div>
+
+      <!-- Live Simulated Output -->
+      <div id="whatIfResultBox" style="padding: 1rem; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.88rem; color: var(--text-secondary); font-weight: 600;">Simulated Outcome:</span>
+          <span id="sim_badge" class="badge badge-{{ record.predicted_class.lower() }}" style="font-size: 1.1rem;">
+            {{ record.predicted_class }}
+          </span>
+        </div>
+
+        <div class="prob-bar-container" style="height: 24px;">
+          <div id="sim_bar_low" class="prob-segment low" data-pct="{{ low_pct }}">
+            {{ low_pct }}%
+          </div>
+          <div id="sim_bar_moderate" class="prob-segment moderate" data-pct="{{ mod_pct }}">
+            {{ mod_pct }}%
+          </div>
+          <div id="sim_bar_high" class="prob-segment high" data-pct="{{ high_pct }}">
+            {{ high_pct }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script id="baseFeaturesData" type="application/json">
+{
+  "training_duration": {{ record.training_duration | tojson }},
+  "training_intensity": {{ record.training_intensity | tojson }},
+  "training_load": {{ record.training_load | tojson }},
+  "heart_rate": {{ record.heart_rate | tojson }},
+  "sleep_quality": {{ record.sleep_quality | tojson }},
+  "recovery_score": {{ record.recovery_score | tojson }},
+  "stress_level": {{ record.stress_level | tojson }}
+}
+</script>
+<script>
+const baseFeatures = JSON.parse(document.getElementById("baseFeaturesData").textContent);
+
+
+let whatIfTimeout = null;
+
+function runWhatIf() {
+  const s = parseFloat(document.getElementById("slider_sleep").value);
+  const r = parseFloat(document.getElementById("slider_recovery").value);
+  const st = parseFloat(document.getElementById("slider_stress").value);
+
+  document.getElementById("val_sleep").innerText = s.toFixed(1);
+  document.getElementById("val_recovery").innerText = r.toFixed(0);
+  document.getElementById("val_stress").innerText = st.toFixed(2);
+
+  clearTimeout(whatIfTimeout);
+  whatIfTimeout = setTimeout(async () => {
+    try {
+      const resp = await fetch("{{ url_for('api_what_if') }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+          base_features: baseFeatures,
+          sleep_quality: s,
+          recovery_score: r,
+          stress_level: st,
+          csrf_token: "{{ csrf_token }}"
+        })
+      });
+      const data = await resp.json();
+      if (data.modified_prediction) {
+        const p = data.modified_prediction;
+        const pClass = p.predicted_class;
+        const badge = document.getElementById("sim_badge");
+        badge.className = `badge badge-${pClass.toLowerCase()}`;
+        badge.innerText = pClass;
+
+        const pLow = p.probabilities_pct.Low;
+        const pMod = p.probabilities_pct.Moderate;
+        const pHigh = p.probabilities_pct.High;
+
+        document.getElementById("sim_bar_low").style.width = pLow + "%";
+        document.getElementById("sim_bar_low").innerText = pLow >= 8 ? pLow + "%" : "";
+        document.getElementById("sim_bar_moderate").style.width = pMod + "%";
+        document.getElementById("sim_bar_moderate").innerText = pMod >= 8 ? pMod + "%" : "";
+        document.getElementById("sim_bar_high").style.width = pHigh + "%";
+        document.getElementById("sim_bar_high").innerText = pHigh >= 8 ? pHigh + "%" : "";
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  }, 150);
+}
+</script>
+{% endblock %}

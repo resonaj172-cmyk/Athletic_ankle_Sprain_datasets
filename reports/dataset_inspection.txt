@@ -1,0 +1,61 @@
+============================================================
+DATASET INSPECTION REPORT
+============================================================
+Zip source: C:\Users\Resona\Downloads\fatigue datasets\archive (1).zip
+Copied zip: C:\Users\Resona\Downloads\fatigue_prediction\data\raw\archive (1).zip
+Files in zip: ['README.md', 'multimodal_sports_injury_dataset.csv']
+Primary CSV: multimodal_sports_injury_dataset.csv
+Total Rows: 15420
+Total Columns: 29
+
+Original Columns & Dtypes:
+  - athlete_id: int64 (missing: 0, 0.00%)
+  - heart_rate: float64 (missing: 354, 2.30%)
+  - body_temperature: float64 (missing: 0, 0.00%)
+  - hydration_level: float64 (missing: 385, 2.50%)
+  - sleep_quality: float64 (missing: 493, 3.20%)
+  - recovery_score: float64 (missing: 0, 0.00%)
+  - stress_level: float64 (missing: 0, 0.00%)
+  - muscle_activity: float64 (missing: 570, 3.70%)
+  - joint_angles: float64 (missing: 0, 0.00%)
+  - gait_speed: float64 (missing: 431, 2.80%)
+  - cadence: float64 (missing: 0, 0.00%)
+  - step_count: int64 (missing: 0, 0.00%)
+  - jump_height: float64 (missing: 0, 0.00%)
+  - ground_reaction_force: float64 (missing: 0, 0.00%)
+  - range_of_motion: float64 (missing: 0, 0.00%)
+  - ambient_temperature: float64 (missing: 0, 0.00%)
+  - humidity: float64 (missing: 0, 0.00%)
+  - altitude: float64 (missing: 0, 0.00%)
+  - playing_surface: int64 (missing: 0, 0.00%)
+  - training_intensity: float64 (missing: 632, 4.10%)
+  - training_duration: float64 (missing: 0, 0.00%)
+  - training_load: float64 (missing: 0, 0.00%)
+  - fatigue_index: float64 (missing: 0, 0.00%)
+  - injury_occurred: int64 (missing: 0, 0.00%)
+  - session_id: int64 (missing: 0, 0.00%)
+  - sport_type: str (missing: 0, 0.00%)
+  - gender: str (missing: 0, 0.00%)
+  - age: int64 (missing: 0, 0.00%)
+  - bmi: float64 (missing: 0, 0.00%)
+
+Required 7 Features + Target Check:
+  - training_duration: FOUND
+  - training_intensity: FOUND
+  - training_load: FOUND
+  - heart_rate: FOUND
+  - sleep_quality: FOUND
+  - recovery_score: FOUND
+  - stress_level: FOUND
+  - fatigue_index: FOUND
+
+Summary Statistics of Raw Data (Numeric):
+         athlete_id    heart_rate  body_temperature  hydration_level  sleep_quality  recovery_score  stress_level  muscle_activity  joint_angles    gait_speed       cadence    step_count   jump_height  ground_reaction_force  range_of_motion  ambient_temperature      humidity      altitude  playing_surface  training_intensity  training_duration  training_load  fatigue_index  injury_occurred    session_id           age           bmi
+count  15420.000000  15066.000000      15420.000000     15035.000000   14927.000000    15420.000000  15420.000000     14850.000000  15420.000000  14989.000000  15420.000000  15420.000000  15420.000000           15420.000000     15420.000000         15420.000000  15420.000000  15420.000000     15420.000000        14788.000000       15420.000000   15420.000000   15420.000000     15420.000000  15420.000000  15420.000000  15420.000000
+mean      78.547601     72.688277         37.106443        78.036991       5.817429       55.202220      0.422916       247.724105    112.464607      1.864699     86.803006   7854.846498      0.482964            1659.122496       124.794439            24.898073     58.191697    297.357416         2.019326            6.399174          87.790419     670.534269      59.698315         0.510117     49.926719     23.953567     23.138679
+std       45.070131     17.758991          0.594843        11.848363       1.814602       17.326338      0.173425       126.930007     30.367148      0.603927     24.296357   2334.201318      0.163927             378.662639        24.529425             5.095228     13.526094    212.351977         1.409120            1.730882          27.628191     328.288466      25.196238         0.741662     28.540223      3.883533      2.301192
+min        1.000000     40.000000         35.800000        45.000000       1.155807        8.902584      0.100000        10.000000     45.000000      0.800000     50.000000   2000.000000      0.150000             800.000000        60.000000            15.000000     30.000000      0.000000         0.000000            2.000000          30.000000     150.000000      15.000000         0.000000      1.000000     18.000000     18.500000
+25%       39.000000     60.097967         36.698612        69.879145       4.510581       42.321722      0.300472       159.150375     91.437246      1.430372     68.051911   6254.000000      0.368154            1399.391943       108.353902            21.254558     48.605990    127.750679         1.000000            5.208488          68.768634     426.148857      41.717110         0.000000     25.000000     21.000000     21.609635
+50%       79.000000     72.304051         37.107090        78.165927       5.755650       54.421403      0.421168       245.496682    112.548535      1.854269     85.716003   7846.000000      0.483312            1662.227916       124.572536            24.839380     58.206251    284.172663         2.000000            6.411926          87.835380     645.225337      57.340187         0.000000     50.000000     24.000000     22.988013
+75%      118.000000     84.812895         37.512165        86.498440       7.068894       67.375690      0.543678       334.039698    133.960070      2.281691    103.378064   9443.000000      0.595766            1916.946706       141.738414            28.397207     67.872637    442.388486         3.000000            7.597567         106.696365     879.607967      75.186924         1.000000     75.000000     27.000000     24.817666
+max      156.000000    159.270125         39.200000       100.000000      10.000000       98.000000      0.950000       722.542819    175.000000      3.500000    185.943983  15000.000000      0.850000            2800.000000       180.000000            38.000000     85.000000   1200.000000         4.000000           10.000000         180.000000    2632.637547     270.193219         2.000000    101.000000     34.000000     28.300000

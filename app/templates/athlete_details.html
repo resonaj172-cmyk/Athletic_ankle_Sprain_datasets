@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Athlete Details - Athlete Fatigue Monitor{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 1rem auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a;">Athlete Profile</h1>
+      <p style="color: var(--text-secondary); font-size: 0.92rem;">
+        Athlete ID: <span class="athlete-badge">{{ athlete.formatted_id }}</span> &bull; {{ current_user.email }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Progress Card -->
+  <div class="card" style="border-left: 4px solid #0f172a;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h3 style="font-size: 1.05rem; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700;">
+          History Baseline Status: {{ session_count }} sessions stored
+        </h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          {% if session_count < 14 %}
+            Initial baseline collecting ({{ session_count }}/14). Predictions activate from session 15 onward.
+          {% else %}
+            Full baseline window recorded (14 sessions). Prediction models are active.
+          {% endif %}
+        </p>
+      </div>
+
+      <form method="POST" action="{{ url_for('load_demo_data') }}" onsubmit="return confirm('Reset and load 14 sample history baseline sessions?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-secondary" style="font-size: 0.85rem;">
+          📥 Reset & Load 14 Sample Sessions
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Profile Form Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Personal & Sports Details</h2>
+    </div>
+
+    <div style="padding: 0.75rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.85rem; color: #475569;">
+      ℹ️ <strong>Notice:</strong> Profile details personalize your athlete dashboard. Machine learning fatigue predictions are evaluated strictly from your session physical metrics.
+    </div>
+
+    <form method="POST" action="{{ url_for('athlete_details') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label" for="age">Age (years)</label>
+          <input type="number" id="age" name="age" class="form-control" placeholder="e.g. 24" value="{{ athlete.age or '' }}" min="10" max="100">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="gender">Gender</label>
+          <select id="gender" name="gender" class="form-control">
+            <option value="" {% if not athlete.gender %}selected{% endif %}>Select Gender</option>
+            <option value="Female" {% if athlete.gender == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Male" {% if athlete.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Non-binary" {% if athlete.gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+            <option value="Prefer not to say" {% if athlete.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="sport_type">Primary Sport / Discipline</label>
+        <input type="text" id="sport_type" name="sport_type" class="form-control" placeholder="e.g. Soccer, Running, Rowing" value="{{ athlete.sport_type or '' }}">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label" for="height_cm">Height (cm) <span style="font-weight: normal; color: var(--text-muted);">(optional)</span></label>
+          <input type="number" step="0.1" id="height_cm" name="height_cm" class="form-control" placeholder="e.g. 175.5" value="{{ athlete.height_cm or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="weight_kg">Weight (kg) <span style="font-weight: normal; color: var(--text-muted);">(optional)</span></label>
+          <input type="number" step="0.1" id="weight_kg" name="weight_kg" class="form-control" placeholder="e.g. 68.0" value="{{ athlete.weight_kg or '' }}">
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <span style="font-size: 0.88rem; color: var(--text-secondary);">
+          Ready to log workout data and predict fatigue?
+        </span>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn btn-secondary">Save Profile Details</button>
+          <a href="{{ url_for('add_session') }}" class="btn btn-primary" style="background: #059669; color: #fff; border: none; font-weight: 700;">
+            🚀 Log Session & Predict Fatigue &rarr;
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="card" style="border-color: #fecaca; background: #ffffff;">
+    <div class="card-header" style="border-bottom-color: #fecaca;">
+      <h2 class="card-title" style="color: #dc2626;">Account & Data Privacy</h2>
+    </div>
+    <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+      You have full control over your stored athlete data. Deleting your account will permanently erase your user profile and all recorded sessions.
+    </p>
+
+    <form method="POST" action="{{ url_for('delete_account') }}" onsubmit="return confirm('CRITICAL: Are you absolutely sure you want to delete your account and all recorded sessions?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-danger">
+        🗑️ Delete account and data
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

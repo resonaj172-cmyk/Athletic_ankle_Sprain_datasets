@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Training Session History - Athlete Fatigue Monitor{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Training Session History</h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+      Chronological session tracking for Athlete <span class="athlete-badge">{{ current_athlete.formatted_id }}</span>
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="{{ url_for('add_session') }}" class="btn btn-primary">+ Add Session</a>
+  </div>
+</div>
+
+<!-- CHARTS SECTION -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h2 class="card-title">Training Load & Recovery Score</h2>
+    </div>
+    <div style="height: 240px; position: relative;">
+      <canvas id="loadRecoveryChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h2 class="card-title">Stress Level & Predicted State</h2>
+    </div>
+    <div style="height: 240px; position: relative;">
+      <canvas id="stressClassChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- SESSIONS TABLE CARD -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">All Recorded Sessions ({{ sessions | length }} Total)</h2>
+    <span style="font-size: 0.82rem; color: var(--text-secondary);">* Edit/Delete available on latest session only</span>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Session</th>
+          <th>Duration</th>
+          <th>Intensity</th>
+          <th>Load</th>
+          <th>HR</th>
+          <th>Sleep</th>
+          <th>Recovery</th>
+          <th>Stress</th>
+          <th>Fatigue Class</th>
+          <th>Probabilities</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not sessions %}
+          <tr>
+            <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              No sessions recorded yet. <a href="{{ url_for('add_session') }}">Record your first session</a>.
+            </td>
+          </tr>
+        {% endif %}
+
+        {% for s in sessions %}
+          <tr {% if s.id == latest_id %}style="background: rgba(6, 182, 212, 0.04);"{% endif %}>
+            <td>
+              <a href="{{ url_for('view_session', session_id=s.id) }}" style="font-weight: 700;">
+                #{{ s.session_number }}
+              </a>
+            </td>
+            <td>{{ s.training_duration }} min</td>
+            <td>{{ s.training_intensity if s.training_intensity is not none else '-' }}</td>
+            <td><strong>{{ s.training_load }}</strong></td>
+            <td>{{ s.heart_rate if s.heart_rate is not none else '-' }}</td>
+            <td>{{ s.sleep_quality if s.sleep_quality is not none else '-' }}</td>
+            <td>{{ s.recovery_score }}</td>
+            <td>{{ s.stress_level }}</td>
+            <td>
+              {% if s.predicted_class %}
+                <span class="badge badge-{{ s.predicted_class.lower() }}">
+                  {{ s.predicted_class }}
+                </span>
+              {% else %}
+                <span style="color: var(--text-muted); font-size: 0.82rem;">Baseline (#{{ s.session_number }}/14)</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-secondary);">
+              {% if s.predicted_class %}
+                L: {{ (s.prob_low * 100) | round(1) }}% &bull;
+                M: {{ (s.prob_moderate * 100) | round(1) }}% &bull;
+                H: {{ (s.prob_high * 100) | round(1) }}%
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.4rem;">
+                <a href="{{ url_for('view_session', session_id=s.id) }}" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">
+                  View
+                </a>
+                {% if s.id == latest_id %}
+                  <a href="{{ url_for('edit_session', session_id=s.id) }}" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">
+                    Edit
+                  </a>
+                  <form method="POST" action="{{ url_for('delete_session', session_id=s.id) }}" onsubmit="return confirm('Delete latest session #{{ s.session_number }}?');" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-danger" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">
+                      Del
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const chartData = JSON.parse('{{ chart_data | safe }}');
+
+  // 1. Load & Recovery Chart
+  const ctx1 = document.getElementById('loadRecoveryChart').getContext('2d');
+  new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [
+        {
+          label: 'Training Load (a.u.)',
+          data: chartData.loads,
+          borderColor: '#06b6d4',
+          backgroundColor: 'rgba(6, 182, 212, 0.1)',
+          yAxisID: 'yLoad',
+          tension: 0.2,
+          fill: true
+        },
+        {
+          label: 'Recovery Score (/100)',
+          data: chartData.recovery,
+          borderColor: '#10b981',
+          borderDash: [4, 4],
+          yAxisID: 'yRec',
+          tension: 0.2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#9ca3af', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        yLoad: { type: 'linear', position: 'left', ticks: { color: '#06b6d4', font: { size: 10 } }, grid: { display: false } },
+        yRec: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#10b981', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+
+  // 2. Stress & Class Chart
+  const ctx2 = document.getElementById('stressClassChart').getContext('2d');
+  new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [
+        {
+          label: 'Stress Level (0-1)',
+          data: chartData.stress,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          yAxisID: 'yStress',
+          tension: 0.2,
+          fill: true
+        },
+        {
+          label: 'Predicted Class (0=Low, 1=Mod, 2=High)',
+          data: chartData.classes,
+          borderColor: '#ef4444',
+          stepped: true,
+          yAxisID: 'yClass',
+          pointRadius: 4,
+          pointBackgroundColor: '#ef4444'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#9ca3af', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        yStress: { type: 'linear', position: 'left', min: 0, max: 1, ticks: { color: '#f59e0b', font: { size: 10 } }, grid: { display: false } },
+        yClass: { type: 'linear', position: 'right', min: 0, max: 2, ticks: { stepSize: 1, color: '#ef4444', callback: v => v === 0 ? 'Low' : v === 1 ? 'Mod' : 'High' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

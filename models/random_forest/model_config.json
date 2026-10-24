@@ -1,0 +1,56 @@
+{
+  "model_key": "random_forest",
+  "model_name": "Random Forest",
+  "model_format": "joblib",
+  "model_file": "model.joblib",
+  "feature_columns": [
+    "training_duration",
+    "training_intensity",
+    "training_load",
+    "heart_rate",
+    "sleep_quality",
+    "recovery_score",
+    "stress_level"
+  ],
+  "class_names": [
+    "Low",
+    "Moderate",
+    "High"
+  ],
+  "training_medians": {
+    "training_duration": 87.89258200356934,
+    "training_intensity": 6.419753613841534,
+    "training_load": 649.6843241597608,
+    "heart_rate": 72.31784492766045,
+    "sleep_quality": 5.755680398798653,
+    "recovery_score": 54.37771884604124,
+    "stress_level": 0.4225663299369364
+  },
+  "sklearn_version": "1.9.0",
+  "metrics": {
+    "model_name": "Random Forest",
+    "test_accuracy": 0.6654467168998923,
+    "macro_precision": 0.6668699828599826,
+    "macro_recall": 0.6654238935125992,
+    "macro_f1": 0.6657096388788247,
+    "weighted_f1": 0.6655624691781307,
+    "roc_auc_macro_ovr": 0.8464180516894281,
+    "train_accuracy": 0.7347563805104408,
+    "cv_macro_f1": 0.6677407159362068,
+    "meets_target": false,
+    "precision_low": 0.711352657004831,
+    "recall_low": 0.7527156549520767,
+    "f1_low": 0.7314498602918348,
+    "precision_moderate": 0.5267224726336124,
+    "recall_moderate": 0.5274016763378465,
+    "f1_moderate": 0.5270618556701031,
+    "precision_high": 0.7625348189415042,
+    "recall_high": 0.7161543492478745,
+    "f1_high": 0.7386172006745363
+  },
+  "timing": {
+    "total_training_wall_time_s": 77.36915270006284,
+    "fit_only_time_s": 2.5948010000865906,
+    "prediction_time_per_1k_s": 0.012405840695040667
+  }
+}

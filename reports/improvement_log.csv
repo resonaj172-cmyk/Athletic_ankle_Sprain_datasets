@@ -1,0 +1,9 @@
+change,cv_macro_f1,cv_accuracy
+LR Baseline (7 features),0.6737205151892067,0.6734106728538284
+LR + Feature Engineering (C=0.5),0.6749670154757503,0.6727610208816706
+"LR + Polynomial Features (deg=2, C=0.1)",0.6723554519264718,0.6709976798143852
+"RF Baseline (7 features, depth=10)",0.6645874749010319,0.6637587006960557
+"RF + Feature Engineering (depth=8, leaf=4)",0.6706515349184692,0.6692343387470998
+"XGB Baseline (7 features, depth=4, lr=0.05)",0.6663264822831046,0.6665429234338747
+"XGB + Feature Engineering (depth=3, lr=0.04)",0.6728983130907898,0.671368909512761
+Regression-then-Bin (GBR on engineered features),0.6770743064696645,0.6709976798143852

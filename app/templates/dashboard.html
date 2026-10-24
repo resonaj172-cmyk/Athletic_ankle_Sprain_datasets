@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Athlete Fatigue Monitor{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Welcome back, {{ current_user.full_name }}</h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+      Athlete ID: <span class="athlete-badge">{{ athlete.formatted_id }}</span>
+      {% if athlete.sport_type %} &bull; {{ athlete.sport_type }}{% endif %}
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="{{ url_for('add_session') }}" class="btn btn-primary">⚡ Add Session</a>
+    <a href="{{ url_for('history') }}" class="btn btn-secondary">📜 View History</a>
+    <a href="{{ url_for('assistant') }}" class="btn btn-secondary">💬 Ask AI Assistant</a>
+  </div>
+</div>
+
+<!-- TOP STATS & PROGRESS -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Sessions Logged</div>
+    <div class="stat-val">{{ session_count }}</div>
+    <div class="stat-sub">
+      {% if session_count < 14 %}
+        Progress: {{ session_count }} of 14 sessions stored ({{ 14 - session_count }} remaining to predictions)
+      {% elif session_count == 14 %}
+        Initial history window complete. Next session (#15) will trigger prediction!
+      {% else %}
+        Active prediction tracking (Session #{{ session_count }} latest)
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Previous 7-Session Load</div>
+    <div class="stat-val">
+      {% if workload and workload.has_window_7 and workload.load_sum_7 is not none %}
+        {{ workload.load_sum_7 | round(0) | int }} <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">a.u.</span>
+      {% else %}
+        <span style="color: var(--text-muted); font-size: 1.1rem;">Need 7 sessions</span>
+      {% endif %}
+    </div>
+    <div class="stat-sub">
+      {% if workload and workload.has_window_7 and workload.load_mean_7 is not none %}
+        Rolling Avg: {{ workload.load_mean_7 | round(1) }} a.u.
+      {% else %}
+        Rolling baseline context
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Previous 14-Session Load</div>
+    <div class="stat-val">
+      {% if workload and workload.has_window_14 and workload.load_sum_14 is not none %}
+        {{ workload.load_sum_14 | round(0) | int }} <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">a.u.</span>
+      {% else %}
+        <span style="color: var(--text-muted); font-size: 1.1rem;">Need 14 sessions</span>
+      {% endif %}
+    </div>
+    <div class="stat-sub">
+      {% if workload and workload.has_window_14 and workload.load_mean_14 is not none %}
+        Rolling Avg: {{ workload.load_mean_14 | round(1) }} a.u.
+      {% else %}
+        Rolling baseline context
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- LATEST PREDICTION & WORKLOAD BANNER -->
+<div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Latest Prediction Card -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h2 class="card-title">Latest Fatigue Assessment</h2>
+      {% if latest_session %}
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Session #{{ latest_session.session_number }}</span>
+      {% endif %}
+    </div>
+
+    {% if not latest_session %}
+      <div style="text-align: center; padding: 2.5rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">No training sessions recorded yet.</p>
+        <a href="{{ url_for('add_session') }}" class="btn btn-primary">Add Your First Session</a>
+      </div>
+    {% elif latest_session.predicted_class %}
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Predicted Fatigue State</div>
+          <span class="badge badge-{{ latest_session.predicted_class.lower() }}" style="font-size: 1.25rem; padding: 0.4rem 1.25rem;">
+            {{ latest_session.predicted_class }}
+          </span>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.82rem; color: var(--text-secondary);">Selected Model</div>
+          <div style="font-weight: 700; color: #0f172a;">{{ latest_session.model_name }}</div>
+        </div>
+      </div>
+
+      <!-- Probability distribution bar -->
+      {% set low_pct = ((latest_session.prob_low or 0) * 100) | round(1) %}
+      {% set mod_pct = ((latest_session.prob_moderate or 0) * 100) | round(1) %}
+      {% set high_pct = ((latest_session.prob_high or 0) * 100) | round(1) %}
+
+      <div style="margin-top: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+          <span>Class Probabilities:</span>
+          <span>
+            Low: {{ low_pct }}% | Moderate: {{ mod_pct }}% | High: {{ high_pct }}%
+          </span>
+        </div>
+
+        <div class="prob-bar-container">
+          <div class="prob-segment low" data-pct="{{ low_pct }}">
+            {% if low_pct >= 12 %}{{ low_pct }}%{% endif %}
+          </div>
+          <div class="prob-segment moderate" data-pct="{{ mod_pct }}">
+            {% if mod_pct >= 12 %}{{ mod_pct }}%{% endif %}
+          </div>
+          <div class="prob-segment high" data-pct="{{ high_pct }}">
+            {% if high_pct >= 12 %}{{ high_pct }}%{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+        <a href="{{ url_for('view_session', session_id=latest_session.id) }}" class="btn btn-secondary" style="font-size: 0.85rem;">
+          View Full Breakdown & What-If &rarr;
+        </a>
+      </div>
+    {% else %}
+      <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+        <h3 style="color: #fbbf24; font-size: 1rem; margin-bottom: 0.5rem;">Collecting Initial History ({{ session_count }} of 14 stored)</h3>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+          Sessions 1 to 14 establish your individual baseline window. Live fatigue predictions and class probability distributions will automatically commence on <strong>Session 15</strong>.
+        </p>
+        <div style="background: rgba(0, 0, 0, 0.3); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 1rem;">
+          <div class="progress-bar-inner" data-pct="{{ (session_count / 14 * 100) | round(0) }}" style="background: linear-gradient(90deg, #06b6d4, #3b82f6); height: 100%;"></div>
+        </div>
+        <a href="{{ url_for('view_session', session_id=latest_session.id) }}" class="btn btn-secondary" style="font-size: 0.85rem;">
+          View Session #{{ latest_session.session_number }} details
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Mini Chart Card -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h2 class="card-title">Recent Training Load</h2>
+      <span style="font-size: 0.82rem; color: var(--text-secondary);">Last 14 Sessions</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="loadChart"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const elem = document.getElementById('loadChart');
+  if (!elem) return;
+  const ctx = elem.getContext('2d');
+  const labels = JSON.parse('{{ chart_labels | safe }}');
+  const dataLoads = JSON.parse('{{ chart_loads | safe }}');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Training Load (a.u.)',
+        data: dataLoads,
+        backgroundColor: 'rgba(6, 182, 212, 0.65)',
+        borderColor: '#06b6d4',
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { display: false, color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#9ca3af', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#9ca3af', font: { size: 11 } },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

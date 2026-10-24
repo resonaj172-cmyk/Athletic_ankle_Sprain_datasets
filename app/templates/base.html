@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Pulse Athletics &bull; Athlete Fatigue &amp; Workload Intelligence{% endblock %}</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('dashboard' if current_user else 'index') }}" class="nav-brand">
+        <span class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </span>
+        <span class="brand-name-group">
+          <span class="brand-title">PULSE ATHLETICS</span>
+          <span class="brand-subtitle">Fatigue Intelligence</span>
+        </span>
+      </a>
+
+      {% if current_user %}
+      <ul class="nav-links">
+        <li><a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="{{ url_for('add_session') }}" class="nav-item {% if request.endpoint == 'add_session' %}active{% endif %}">Log Session</a></li>
+        <li><a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint == 'history' %}active{% endif %}">History &amp; Trends</a></li>
+        <li><a href="{{ url_for('athlete_details') }}" class="nav-item {% if request.endpoint == 'athlete_details' %}active{% endif %}">Athlete Profile</a></li>
+        <li><a href="{{ url_for('assistant') }}" class="nav-item {% if request.endpoint == 'assistant' %}active{% endif %}">Training Advisor</a></li>
+        <li><a href="{{ url_for('logout') }}" class="nav-item nav-logout">Logout</a></li>
+      </ul>
+      <div class="nav-user">
+        <span class="user-name">{{ current_user.full_name }}</span>
+        {% if current_athlete %}
+          <span class="athlete-badge">{{ current_athlete.formatted_id }}</span>
+        {% endif %}
+      </div>
+      {% else %}
+      <ul class="nav-links">
+        <li><a href="{{ url_for('index') }}#methodology" class="nav-item">Methodology</a></li>
+        <li><a href="{{ url_for('index') }}#telemetry" class="nav-item">Telemetry</a></li>
+        <li><a href="{{ url_for('login') }}" class="nav-item {% if request.endpoint == 'login' %}active{% endif %}">Sign In</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn btn-primary nav-cta">Get Started</a></li>
+      </ul>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main class="main-content {% if request.endpoint == 'index' %}landing-main{% endif %}">
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-col brand-col">
+          <div class="footer-brand">
+            <span class="brand-icon footer-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </span>
+            <span class="brand-title">PULSE ATHLETICS</span>
+          </div>
+          <p class="footer-desc">
+            Evidence-based session-by-session fatigue classification, acute:chronic workload modeling, and recovery optimization for competitive athletes and coaches.
+          </p>
+          <div class="system-status-indicator">
+            <span class="status-dot"></span>
+            <span>All Physiological Analytics Pipelines Operational</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Sports Science</h4>
+          <ul>
+            <li><span>Foster's Session-RPE Method</span></li>
+            <li><span>Acute:Chronic Workload (ACWR)</span></li>
+            <li><span>Multi-Parametric Telemetry</span></li>
+            <li><span>14-Session Rolling Baselines</span></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="{{ url_for('login') }}">Athlete Portal</a></li>
+            <li><a href="{{ url_for('register') }}">Create Account</a></li>
+            <li><a href="{{ url_for('index') }}#methodology">Methodology</a></li>
+            <li><a href="{{ url_for('index') }}#telemetry">Telemetry Metrics</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Standards</h4>
+          <ul>
+            <li><span>ISO 27001 Protocol</span></li>
+            <li><span>Encrypted Session Telemetry</span></li>
+            <li><span>Explainable ML Attribution</span></li>
+            <li><span>Sports Medicine Compliance</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Pulse Athletics Systems. High-Performance Sports Science &amp; Workload Analytics. All rights reserved.</p>
+        <p class="footer-sub-text">Calibrated on empirical athlete training datasets across Olympic, collegiate, and professional microcycles.</p>
+      </div>
+    </div>
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll("[data-pct]").forEach(function(el) {
+        var pct = el.getAttribute("data-pct");
+        if (pct !== null) { el.style.width = pct + "%"; }
+      });
+    });
+  </script>
+</body>
+</html>

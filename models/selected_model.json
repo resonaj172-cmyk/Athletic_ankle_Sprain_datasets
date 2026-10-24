@@ -1,0 +1,20 @@
+{
+  "model_key": "logistic_regression",
+  "model_name": "Logistic Regression",
+  "model_path": "C:\\Users\\Resona\\Downloads\\fatigue_prediction\\models\\logistic_regression\\model.joblib",
+  "config_path": "C:\\Users\\Resona\\Downloads\\fatigue_prediction\\models\\logistic_regression\\model_config.json",
+  "selected_on": "2026-10-06T16:39:38.936231+00:00",
+  "metrics": {
+    "accuracy": 0.6708288482238967,
+    "macro_f1": 0.6706881681726197,
+    "weighted_f1": 0.6705246753345853,
+    "roc_auc": 0.8502206901041708,
+    "train_accuracy": 0.6728538283062645,
+    "cv_macro_f1": 0.6737205151892067,
+    "training_time_s": 3.507378999842331,
+    "prediction_time_per_1k_ms": 0.2540731993057,
+    "meets_target": false
+  },
+  "rule": "Among candidate models, highest test macro-F1 (with ties within 0.005 broken by ROC-AUC and prediction latency).",
+  "close_models_note": "Note: XGBoost, Random Forest differed by less than 1 percentage point from Logistic Regression; the statistical difference is minimal and selection is practical."
+}

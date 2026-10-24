@@ -1,0 +1,43 @@
+{
+  "class_names": [
+    "Low",
+    "Moderate",
+    "High"
+  ],
+  "class_mapping": {
+    "0": "Low",
+    "1": "Moderate",
+    "2": "High"
+  },
+  "thresholds": {
+    "low_max": 47.26,
+    "moderate_max": 68.89
+  },
+  "percentile_low_boundary": 33.63164721141375,
+  "percentile_moderate_boundary": 67.12062256809338,
+  "class_distribution": {
+    "Low": {
+      "count": 5186,
+      "percentage": 33.63164721141375
+    },
+    "Moderate": {
+      "count": 5164,
+      "percentage": 33.48897535667963
+    },
+    "High": {
+      "count": 5070,
+      "percentage": 32.87937743190661
+    }
+  },
+  "feature_columns": [
+    "training_duration",
+    "training_intensity",
+    "training_load",
+    "heart_rate",
+    "sleep_quality",
+    "recovery_score",
+    "stress_level"
+  ],
+  "target_column": "fatigue_index",
+  "class_column": "fatigue_class"
+}

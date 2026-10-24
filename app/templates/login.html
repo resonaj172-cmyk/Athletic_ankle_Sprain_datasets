@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In &bull; Athlete Performance & Fatigue Analytics{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon-badge">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </div>
+      <h1 class="auth-title">Athlete &amp; Coach Sign In</h1>
+      <p class="auth-subtitle">Enter your credentials to access your session telemetry, rolling baselines, and fatigue diagnostics.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('login', next=request.args.get('next', '')) }}" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div class="form-group">
+        <label class="form-label" for="email">
+          <span>Email Address</span>
+          <span class="label-optional">Required</span>
+        </label>
+        <div class="input-with-icon">
+          <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          <input type="email" id="email" name="email" class="form-control" placeholder="athlete@gmail.com" value="{{ email or '' }}" required autofocus autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">
+          <span>Password</span>
+        </label>
+        <div class="input-with-icon">
+          <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input type="password" id="password" name="password" class="form-control" placeholder="••••••••••••" required autocomplete="current-password">
+        </div>
+      </div>
+
+      <div class="auth-row-options">
+        <label class="checkbox-container">
+          <input type="checkbox" id="show_pwd" onclick="togglePasswordVisibility()">
+          <span class="checkbox-label">Show Password</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">
+        Sign In to Portal
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </button>
+    </form>
+
+    <div class="auth-footer-nav">
+      <span>New athlete or coach?</span>
+      <a href="{{ url_for('register') }}" class="auth-link">Create an account</a>
+    </div>
+
+    <div class="auth-security-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span>Multi-parameter sports telemetry is encrypted &amp; private</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePasswordVisibility() {
+  const p = document.getElementById("password");
+  p.type = p.type === "password" ? "text" : "password";
+}
+</script>
+{% endblock %}
